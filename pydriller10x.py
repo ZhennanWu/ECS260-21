@@ -1,76 +1,74 @@
 from pydriller import *
+import numpy as np
 import pandas as pd
 from datetime import date, datetime
 from analyze import *
-import numpy as np
+from analysis.identifier_name import NamingStyle
 
 urls = ["https://github.com/ishepard/pydriller.git"]
-since = datetime(2020, 10, 8, 17, 0, 0)
+# urls = ["../pydriller"]
+since = datetime(2021, 5, 8, 17, 0, 0)
+to = datetime.now()
 
 
 def evaluate_value_doc(modified_file: ModifiedFile):
     return modified_file.added_lines * 0.01
 
 
-######## Start commit data collection
-commit_data = pd.DataFrame(columns=[
-    ### Below are standard commit infomation
-    'hash',
-    'author_email',
-    'author_date',
-    'insertions',
-    'deletions',
-    'lines',
-    ### Below are statistics from individual files
-    'value',
-    'added_lines_py',
-    'deleted_lines_py',
-])
+# Start commit data collection
 
-for commit in Repository(path_to_repo=urls, since=since).traverse_commits():
-    ### Each modified source file will produce a statistic
-    modified_src_stat = pd.DataFrame(columns=[
-        'value',
-        'added_lines_py',
-        'deleted_lines_py'
-    ])
+
+commit_dicts = []
+
+for commit in Repository(path_to_repo=urls, since=since, to=to).traverse_commits():
+    # Each modified source file will produce a statistic
     doc_value = 0
+    per_source_file_stats = []
     for modified_file in commit.modified_files:
         if modified_file.filename.endswith(".py"):
-            modified_src_stat = modified_src_stat.append(analyze_src(modified_file), ignore_index=True)
-        if modified_file.filename.endswith((".md", "adoc")): # TODO: more doc file types
+            per_source_file_stats.append(analyze_src(modified_file))
+        # TODO: more doc file types
+        if modified_file.filename.endswith((".md", "adoc")):
             doc_value += evaluate_value_doc(modified_file)
+    modified_src_stat = pd.DataFrame(per_source_file_stats, columns=py_source_stat_columns)
 
-    ### Combine the statistics from each individual source file
+    # Combine the statistics from each individual source file
     stat = modified_src_stat.groupby(lambda x: True).aggregate(
-        value=('value', 'sum'),
-        added_lines_py=('added_lines_py', 'sum'),
-        deleted_lines_py=('deleted_lines_py', 'sum'),
+        **py_source_stat_combiner
     ).to_dict('records')
 
-    stat = stat[0] if len(stat) > 0 else {
-        'value': 0,
-        'added_lines_py': 0,
-        'deleted_lines_py': 0,
-    }
+    stat = stat[0] if len(stat) > 0 else py_source_stat_default
 
-    commit_data = commit_data.append({
+    commit_dicts.append({
         'hash': commit.hash,
         'author': commit.author.email,
         'author_date': commit.author_date,
         'insertions': commit.insertions,
         'deletions': commit.deletions,
         'lines': commit.lines,
+        **stat,
         'value': stat['value'] + doc_value,
-        'added_lines_py': stat['added_lines_py'],
-        'deleted_lines_py': stat['deleted_lines_py'],
-    }, ignore_index=True)
+    })
+
+commit_data = pd.DataFrame(commit_dicts, columns=[
+    # Below are standard commit infomation
+    'hash',
+    'author',
+    'author_date',
+    'insertions',
+    'deletions',
+    'lines',
+    # Below are statistics from individual files
+    *py_source_stat_columns,
+])
 
 
-######## Usage of generated commit data
+# Usage of generated commit data
 commit_data.to_csv('commit_data.csv')
-commit_data.groupby('author').aggregate(
-    commit_count = ('hash', 'size'),
-    lines = ('lines', 'sum'),
-    value = ('value', 'sum')
-).to_csv('data.csv')
+data_grouped_by_author = commit_data.groupby('author').aggregate(
+    commit_count=('hash', 'size'),
+    lines=('lines', 'sum'),
+    **py_source_stat_combiner
+)
+data_grouped_by_author.to_csv('data.csv')
+print(data_grouped_by_author['var_names_style_stat']['spadini.davide@gmail.com'][NamingStyle.Snake.value])

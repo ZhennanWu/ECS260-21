@@ -10,7 +10,7 @@ import numpy as np
 def get_data(url):
     headers = {
         'User-Agent': 'Mozilla/5.0',
-        'Authorization':'token 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', # need to give the token if we use github-api
+        'Authorization':'token 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', # need to give the token if we use github-api
         'Content-Type':'application/json',
         'method': 'GET',
         'Accept': 'application/json'
@@ -51,7 +51,7 @@ if __name__=='__main__':
             url='https://api.github.com/users/{name}/events?page={page}&per_page=100'.format(name=name,page=page)
             headers = {
                     'User-Agent': 'Mozilla/5.0',
-                'Authorization':'token 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',
+                'Authorization':'token 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',
                 'Content-Type':'application/json',
                 'method': 'GET',
                     'Accept': 'application/json'
@@ -74,56 +74,108 @@ if __name__=='__main__':
         contributor_event.append(diction)
 
     print(contributor_event)
-
-    # count the events for each contributor
     contributor_events = pd.DataFrame(columns=[
         ### Below are standard commit infomation
         'name',
-        'Issue',
-        'PullRequestReviewComment',
-        'IssueComment',
-        'CommitComment',
-        'PullRequest',
-        'Push',
-        'Create/Delete',
+        'target_code',
+        'target_comment',
+        'target_issue',
+        'other_code',
+        'other_comment',
+        'other_issue'
     ])
     for item in contributor_event:
-        Issue=0
-        CommitComment=0
-        Push=0
-        Create_Delete=0
-        IssueComment=0
-        PullRequest=0
-        PullRequestReview=0
+        target_code=0
+        target_comment=0
+        target_issue=0
+        other_code=0
+        other_comment=0
+        other_issue=0
         for event in item['event']:
-            if event['event']=='IssuesEvent':
-                Issue+=1
-            if event['event']=='PushEvent':
-                Push+=1
-            if event['event'] == 'PullRequestEvent':
-                PullRequest+=1
-            if event['event']=='IssueCommentEvent':
-                IssueComment+=1
-            if event['event'] == 'PullRequestReviewCommentEvent':
-                PullRequestReview+=1
-            if event['event']=='CreateEvent' or event['event']=='DeleteEvent':
-                Create_Delete+=1
-            if event['event']=='CommitCommentEvent':
-                CommitComment+=1
+            if event['repo']['name']==item['name']+'/'+'tensorflow':
+                if event['event']=='IssuesEvent' or event['event'] == 'IssueCommentEvent':
+                    target_issue+=1
+                if event['event']=='PushEvent' or event['event'] == 'PullRequestEvent' or event['event']=='CreateEvent' or event['event']=='DeleteEvent':
+                    target_code+=1
+                if event['event']=='IssueCommentEvent' or event['event'] == 'PullRequestReviewCommentEvent'or event['event']=='CommitCommentEvent':
+                    target_comment+=1
+            else:
+                if event['event'] == 'IssuesEvent' or event['event'] == 'IssueCommentEvent':
+                    other_issue += 1
+                if event['event'] == 'PushEvent' or event['event'] == 'PullRequestEvent' or event[
+                    'event'] == 'CreateEvent' or event['event'] == 'DeleteEvent':
+                    other_code += 1
+                if event['event'] == 'PullRequestReviewCommentEvent' or event[
+                    'event'] == 'CommitCommentEvent':
+                    other_comment += 1
+
         contributor_events = contributor_events.append({
             'name':item['name'],
-            'Issue':Issue,
-            'PullRequestReviewComment': PullRequestReview,
-            'IssueComment': IssueComment,
-            'CommitComment': CommitComment,
-            'PullRequest':PullRequest,
-            'Push':Push,
-            'Create/Delete':Create_Delete,
+            'target_code':target_code,
+            'target_comment':target_comment,
+            'target_issue':target_issue,
+            'other_code':other_code,
+            'other_comment':other_comment,
+            'other_issue':other_issue
 
         }, ignore_index=True)
-
+    print(contributor_events.head(5))
     # print(contributor_events.head(5))
     # print(contributor_events.iloc[1])
     # print(contributor_events['PullRequestReviewComment'].sum())
     # print(contributor_events['CommitComment'].sum())
-    contributor_events.to_csv('./contributor_events.csv')
+    contributor_events.to_csv('./contributor_events_radar.csv')
+
+    # print()
+    # # count the events for each contributor
+    # contributor_events = pd.DataFrame(columns=[
+    #     ### Below are standard commit infomation
+    #     'name',
+    #     'Issue',
+    #     'PullRequestReviewComment',
+    #     'IssueComment',
+    #     'CommitComment',
+    #     'PullRequest',
+    #     'Push',
+    #     'Create/Delete',
+    # ])
+    # for item in contributor_event:
+    #     Issue=0
+    #     CommitComment=0
+    #     Push=0
+    #     Create_Delete=0
+    #     IssueComment=0
+    #     PullRequest=0
+    #     PullRequestReview=0
+    #     for event in item['event']:
+    #         if event['event']=='IssuesEvent':
+    #             Issue+=1
+    #         if event['event']=='PushEvent':
+    #             Push+=1
+    #         if event['event'] == 'PullRequestEvent':
+    #             PullRequest+=1
+    #         if event['event']=='IssueCommentEvent':
+    #             IssueComment+=1
+    #         if event['event'] == 'PullRequestReviewCommentEvent':
+    #             PullRequestReview+=1
+    #         if event['event']=='CreateEvent' or event['event']=='DeleteEvent':
+    #             Create_Delete+=1
+    #         if event['event']=='CommitCommentEvent':
+    #             CommitComment+=1
+    #     contributor_events = contributor_events.append({
+    #         'name':item['name'],
+    #         'Issue':Issue,
+    #         'PullRequestReviewComment': PullRequestReview,
+    #         'IssueComment': IssueComment,
+    #         'CommitComment': CommitComment,
+    #         'PullRequest':PullRequest,
+    #         'Push':Push,
+    #         'Create/Delete':Create_Delete,
+    #
+    #     }, ignore_index=True)
+    #
+    # # print(contributor_events.head(5))
+    # # print(contributor_events.iloc[1])
+    # # print(contributor_events['PullRequestReviewComment'].sum())
+    # # print(contributor_events['CommitComment'].sum())
+    # contributor_events.to_csv('./contributor_events.csv')

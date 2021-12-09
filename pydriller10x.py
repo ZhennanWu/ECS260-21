@@ -9,8 +9,7 @@ url2="https://github.com/spring-projects/spring-boot.git"
 url3='https://github.com/NVIDIA/DeepLearningExamples'
 url4='D:/github_project/tensorflow/'
 urls = [url4]
-since = datetime(2019, 11, 10, 17, 0, 0)
-
+since = datetime(2021, 1, 10, 17, 0, 0)
 
 def evaluate_value_doc(modified_file: ModifiedFile):
     return modified_file.added_lines * 0.01
@@ -35,9 +34,9 @@ for commit in Repository(path_to_repo=urls, since=since).traverse_commits():
     ### Each modified source file will produce a statistic
     print("commit {}, date {}".format(
         commit.hash, commit.author_date))
-    print('dmm_size{},dmm_complexity{},dmm_interfacing{}'.format(commit.dmm_unit_size,
-                commit.dmm_unit_complexity,
-                commit.dmm_unit_interfacing))
+    # print('dmm_size{},dmm_complexity{},dmm_interfacing{}'.format(commit.dmm_unit_size,
+    #             commit.dmm_unit_complexity,
+    #             commit.dmm_unit_interfacing))
 
 
 
@@ -88,7 +87,7 @@ for commit in Repository(path_to_repo=urls, since=since).traverse_commits():
 
 
 ######## Usage of generated commit data
-commit_data.to_csv('./commit_data.csv')
+commit_data.to_csv('./commit_data-tensorflow.csv')
 commit_data.groupby('author').aggregate(
     commit_count = ('hash', 'size'),
     lines = ('lines', 'sum'),

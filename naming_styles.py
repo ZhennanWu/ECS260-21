@@ -6,9 +6,13 @@ from datetime import date, datetime
 from analyze import *
 from analysis.identifier_name import NamingStyle
 
-url1="https://github.com/awslabs/aws-data-wrangler.git"
-url2="https://github.com/pymc-devs/pymc.git"
-url3='https://github.com/numpy/numpy.git'
+# url1="https://github.com/awslabs/aws-data-wrangler.git"
+# url2="https://github.com/pymc-devs/pymc.git"
+# url3='https://github.com/numpy/numpy.git'
+
+url1="../aws-data-wrangler"
+url2="../pymc"
+url3='../numpy'
 # url4='D:/github_project/tensorflow/'
 urls = [url1, url2, url3]
 since = datetime(2019, 12, 8, 17, 0, 0)
@@ -19,6 +23,7 @@ def evaluate_value_doc(modified_file: ModifiedFile):
 # Start commit data collection
 
 for i in range(3):
+    print("collecting {}".format(i))
     commit_dicts = []
 
     for commit in Repository(path_to_repo=urls[i], since=since, to=to).traverse_commits():
@@ -48,13 +53,14 @@ for i in range(3):
             'author':commit.author.name,
             'author_email': commit.author.email,
             'author_date': commit.author_date,
-            'lines': commit.lines,
+            # 'lines': commit.lines,
             **stat,
             'value': stat['value'] + doc_value,
             'dmm_score': dmm_score,
 
         })
 
+    print("summarizing {}".format(i))
     commit_data = pd.DataFrame(commit_dicts, columns=[
         # Below are standard commit infomation
         'hash',
@@ -74,12 +80,12 @@ for i in range(3):
 
 
     # Usage of generated commit data
-    commit_data.to_csv('commit_data_%d.csv'.format(i))
+    commit_data.to_csv('commit_data_{}.csv'.format(i))
     data_grouped_by_author = commit_data.groupby('author').aggregate(
         commit_count=('hash', 'size'),
         lines=('lines', 'sum'),
         **py_source_stat_combiner,
         dmm_score=('dmm_score','sum')
     )
-    data_grouped_by_author.to_csv('data_i.csv'.format(i))
-    print(data_grouped_by_author['var_names_style_stat']['Davide Spadini'][NamingStyle.Snake.value])
+    data_grouped_by_author.to_csv('data_{}.csv'.format(i))
+    # print(data_grouped_by_author['var_names_style_stat']['Davide Spadini'][NamingStyle.Snake.value])

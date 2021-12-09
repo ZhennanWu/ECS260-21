@@ -10,7 +10,15 @@ def extract_all_identifier_names(source):
         'fun_names': [],
         'class_names': [],
     }
-    root = ast.parse(source)
+    try:
+        root = ast.parse(source)
+    except Exception:
+        return {
+            'var_names': [],
+            'fun_names': [],
+            'class_names': [],
+        }
+
     var_names = sorted(
         node.id for node in ast.walk(root) if isinstance(
             node, ast.Name) and not isinstance(node.ctx, ast.Load)
@@ -86,7 +94,7 @@ def analyze_naming_style_for_identifier(name):
         if is_all_lower:
             return NamingStyle.Snake
         if is_all_upper:
-            return NamingStyle.Screaming
+            return NamingStyle.Screaming_Snake
         terms = name.split('_')
         if all(term[0].isupper() for term in terms):
             return NamingStyle.UpperSnake

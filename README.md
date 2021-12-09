@@ -1,8 +1,10 @@
 # For graders
-The plot generating scripts are in `plot_naming_style.py`, `usepydriller.py`, `plot_event.py`, `frequency_commit.py`. The csv files are essential, as a fresh run of data collection usually takes more than 1 hour. A fresh run starts from pydriller10x.py.
+The plot generating scripts are in `plot_naming_style.py`, `usepydriller.py`, `plot_event.py`, `frequency_commit.py`. The csv files are essential, as a fresh run of data collection usually takes more than 1 hour. A fresh run starts from pydriller10x.py and then `computeRank.py`.
 
 
 
+
+# Previous notes during development
 - The main logic is in pydriller10x.ipynb. It's a Jupyter Notebook
 - The data is gathered from two sources: commit metadata, and each modified file in each commit
 

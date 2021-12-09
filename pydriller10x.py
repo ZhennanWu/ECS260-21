@@ -9,7 +9,7 @@ url1="https://github.com/tensorflow/tensorflow.git"
 url2="https://github.com/spring-projects/spring-boot.git"
 url3='https://github.com/NVIDIA/DeepLearningExamples'
 url4='D:/github_project/tensorflow/'
-urls = [url4]
+urls = ["../pydriller"]
 since = datetime(2021, 1, 10, 17, 0, 0)
 to = datetime.now()
 
@@ -70,7 +70,7 @@ commit_data = pd.DataFrame(commit_dicts, columns=[
     'dmm_score'
 ])
 
-    commit_data=commit_data.drop(commit_data[commit_data['dmm_score']==-1].index)
+    # commit_data=commit_data.drop(commit_data[commit_data['dmm_score']==-1].index)
 
 
 # Usage of generated commit data
@@ -82,4 +82,4 @@ data_grouped_by_author = commit_data.groupby('author').aggregate(
     dmm_score=('dmm_score','sum')
 )
 data_grouped_by_author.to_csv('data.csv')
-print(data_grouped_by_author['var_names_style_stat']['spadini.davide@gmail.com'][NamingStyle.Snake.value])
+print(data_grouped_by_author['var_names_style_stat']['Davide Spadini'][NamingStyle.Snake.value])

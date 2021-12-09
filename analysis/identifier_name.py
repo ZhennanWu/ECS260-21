@@ -94,7 +94,7 @@ def analyze_naming_style_for_identifier(name):
         if is_all_lower:
             return NamingStyle.LowerCamelOrSnake
         if is_all_upper:
-            return NamingStyle.Screaming
+            return NamingStyle.Screaming_Snake
         if name[0].islower():
             return NamingStyle.LowerCamel
         if name[0].isupper():

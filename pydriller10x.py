@@ -5,11 +5,13 @@ from datetime import date, datetime
 from analyze import *
 from analysis.identifier_name import NamingStyle
 
-urls = ["https://github.com/ishepard/pydriller.git"]
-# urls = ["../pydriller"]
-since = datetime(2021, 5, 8, 17, 0, 0)
+url1="https://github.com/tensorflow/tensorflow.git"
+url2="https://github.com/spring-projects/spring-boot.git"
+url3='https://github.com/NVIDIA/DeepLearningExamples'
+url4='D:/github_project/tensorflow/'
+urls = [url4]
+since = datetime(2021, 1, 10, 17, 0, 0)
 to = datetime.now()
-
 
 def evaluate_value_doc(modified_file: ModifiedFile):
     return modified_file.added_lines * 0.01
@@ -36,18 +38,21 @@ for commit in Repository(path_to_repo=urls, since=since, to=to).traverse_commits
     stat = modified_src_stat.groupby(lambda x: True).aggregate(
         **py_source_stat_combiner
     ).to_dict('records')
-
+    if commit.dmm_unit_size!=None and commit.dmm_unit_complexity!=None and commit.dmm_unit_interfacing!=None:
+        dmm_score=commit.dmm_unit_size+commit.dmm_unit_complexity+ commit.dmm_unit_interfacing
+    else:
+        dmm_score=0
     stat = stat[0] if len(stat) > 0 else py_source_stat_default
 
     commit_dicts.append({
         'hash': commit.hash,
-        'author': commit.author.email,
+        'author':commit.author.name,
+        'author_email': commit.author.email,
         'author_date': commit.author_date,
-        'insertions': commit.insertions,
-        'deletions': commit.deletions,
         'lines': commit.lines,
         **stat,
         'value': stat['value'] + doc_value,
+        'dmm_score': dmm_score,
     })
 
 commit_data = pd.DataFrame(commit_dicts, columns=[
@@ -60,7 +65,12 @@ commit_data = pd.DataFrame(commit_dicts, columns=[
     'lines',
     # Below are statistics from individual files
     *py_source_stat_columns,
+
+    # Below from Xiuqi
+    'dmm_score'
 ])
+
+    commit_data=commit_data.drop(commit_data[commit_data['dmm_score']==-1].index)
 
 
 # Usage of generated commit data
@@ -68,7 +78,8 @@ commit_data.to_csv('commit_data.csv')
 data_grouped_by_author = commit_data.groupby('author').aggregate(
     commit_count=('hash', 'size'),
     lines=('lines', 'sum'),
-    **py_source_stat_combiner
+    **py_source_stat_combiner,
+    dmm_score=('dmm_score','sum')
 )
 data_grouped_by_author.to_csv('data.csv')
 print(data_grouped_by_author['var_names_style_stat']['spadini.davide@gmail.com'][NamingStyle.Snake.value])

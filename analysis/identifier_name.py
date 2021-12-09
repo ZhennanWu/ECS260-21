@@ -108,3 +108,4 @@ def analyze_naming_style_for_identifier(name):
         if name[0].isupper():
             return NamingStyle.UpperCamel
     return NamingStyle.Unknown
+
